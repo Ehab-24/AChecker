@@ -1,8 +1,8 @@
-from sha3 import keccak_256
+from Crypto.Hash import keccak
 
 
 def sha3(data):
-    return keccak_256(data).digest()
+    return keccak.new(data=data, digest_bits=256).digest()
 
 
 TT256 = 2 ** 256
@@ -55,7 +55,6 @@ def log2(x):
 
 def to_signed(i):
     return i if i < TT255 else i - TT256
-
 
 
 class Denoms:
