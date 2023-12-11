@@ -66,7 +66,8 @@ def get_memory_info(ins, code, memory_infos=None):
     write_range = None
     for b in bs:
         try:
-            state = run(slice_to_program(b), EVMState(code=code), check_initialized=True)
+            state = run(slice_to_program(b), EVMState(
+                code=code), check_initialized=True)
         except UninitializedRead as e:
             raise e
         except ExternalData as e:
@@ -91,11 +92,11 @@ def get_memory_info(ins, code, memory_infos=None):
 
 
 def resolve_all_memory(cfg, code):
-    memory_infos = dict()    
+    memory_infos = dict()
     resolve_later = deque(
         ins for bb in cfg.bbs for ins in bb.ins if ins.name in memory_reads or ins.name in memory_writes)
     todo = deque()
-    progress = True    
+    progress = True
     while todo or (progress and resolve_later):
         if not todo:
             todo = resolve_later
@@ -103,12 +104,12 @@ def resolve_all_memory(cfg, code):
             progress = False
         ins = todo.popleft()
         try:
-            mi = get_memory_info(ins, code, memory_infos)                                            
-            if mi:              
+            mi = get_memory_info(ins, code, memory_infos)
+            if mi:
                 progress = True
                 memory_infos[ins] = mi
-        except TimeoutException:                
-                raise TimeoutException("Timed out!")
-        except Exception as e:            
+        except TimeoutException:
+            raise TimeoutException("Timed out!")
+        except Exception as e:
             resolve_later.append(ins)
     return memory_infos
