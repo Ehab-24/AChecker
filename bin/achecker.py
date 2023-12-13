@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import json
+import time
 import logging
 import resource
 import sys
@@ -408,7 +409,7 @@ def analysis(p, initial_storage=dict(), sym_validation=None, mode=None, initial_
                         if not MissingIntendedB:
                             missing_ac_count += 1
 
-    return AnalysisBugDetails(violated_ac_count, missing_ac_count, violated_ac_ib_count)
+    return [violated_ac_count, missing_ac_count, violated_ac_ib_count]
 
 
 def main():
@@ -440,7 +441,7 @@ def main():
 
     args = parser.parse_args()
 
-    if args.file is None and args.directory is None:
+    if args.file is None and args.file is None and args.directory is None:
         print('Usage: %s  <-f file>   [--memory] [--savefile]' %
               sys.argv[0], file=sys.stderr)
         exit(-1)
@@ -468,8 +469,10 @@ def main():
                                for k, v in json.load(f).items()}
 
     analysis_details = []
+    start_time = time.time() * 1000
 
     if not args.bytecode:
+
         contracts = get_evm(args.file)
 
         # Analyze each contract
@@ -478,16 +481,16 @@ def main():
             print("------------------\n")
             code = bytes.fromhex(bin_str)
             p = Project(code)
-            analysis_details.append(analysis(p, initial_storage,
-                                             sym_validation=symbolic_validation, mode=mode))
+            analysis_details.append([args.file] + analysis(p, initial_storage,
+                                                           sym_validation=symbolic_validation, mode=mode))
 
     elif not args.directory:
         with open(args.file) as infile:
             inbuffer = infile.read().rstrip()
         code = bytes.fromhex(inbuffer)
         p = Project(code)
-        analysis_details.append(analysis(p, initial_storage,
-                                         sym_validation=symbolic_validation, mode=mode))
+        analysis_details.append([args.file] + analysis(p, initial_storage,
+                                                       sym_validation=symbolic_validation, mode=mode))
 
     else:
         for filename in os.listdir(args.directory):
@@ -497,16 +500,21 @@ def main():
                     inbuffer = infile.read().rstrip()
                     code = bytes.fromhex(inbuffer)
                     p = Project(code)
-                    analysis_details.append(analysis(p, initial_storage,
-                                                     sym_validation=symbolic_validation, mode=mode))
+                    analysis_details.append([filename] + analysis(p, initial_storage,
+                                                                  sym_validation=symbolic_validation, mode=mode))
+
+    end_time = time.time() * 1000
+    elapsed_time = end_time - start_time
+
     print("Summary:")
     print("------------------\n")
     print("Violated access control checks: {0}".format(
-        sum([a.violated_ac_checks for a in analysis_details])))
+        sum([a[1] for a in analysis_details])))
     print("Missing access control checks: {0}".format(
-        sum([a.missing_ac_checks for a in analysis_details])))
+        sum([a[2] for a in analysis_details])))
     print("Intended behavior: {0}".format(
-        sum([a.violated_ac_checks_ib for a in analysis_details])))
+        sum([a[3] for a in analysis_details])))
+    print("Elapsed Time (ms): {0}".format(elapsed_time))
 
 
 if __name__ == '__main__':
