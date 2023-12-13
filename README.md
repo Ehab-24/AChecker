@@ -45,5 +45,13 @@ python bin/achecker.py -f CVE-2021-34273.code -b -m 8
 
 The option -m enables setting the allocated memory for the analysis (in gigabytes). In this example, the allocated memory limit is set to 8 GB. The default value is 6 GB when the option -m is not used.
 
+ ### Analyzing a smart contract dataset
+Use the following command to run AChecker on a directory consisting of *bytecode* files
+```
+./achecker.sh /path/to/dataset /path/to/output
+```
+
+The `/path/to/output` tells the script where to place the `results.csv` file
+
 ## Contact
 For questions about our paper or this code, please get in touch with Asem Ghaleb (aghaleb@alumni.ubc.ca)
